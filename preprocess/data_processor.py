@@ -13,6 +13,7 @@ p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if p not in sys.path:
     sys.path.append(p)
 
+from myutils.make_html_page import make_html_page
 from myutils.cv_utils import *
 from myutils.project_utils import *
 from root_dir import DATA_DIR
@@ -39,6 +40,10 @@ class DataProcessor(object):
         mkdir_if_not_exist(self.train_lbls_dir)
         mkdir_if_not_exist(self.val_lbls_dir)
 
+        time_str = get_current_time_str()
+        self.out_txt = os.path.join(self.out_dir, "check-{}.txt".format(time_str))
+        self.out_html = os.path.join(self.out_dir, "check-{}.html".format(time_str))
+
     @staticmethod
     def convert(iw, ih, box):
         """
@@ -59,16 +64,29 @@ class DataProcessor(object):
         return x, y, w, h
 
     @staticmethod
-    def process_line(idx, data_line, imgs_dir, lbls_dir):
+    def save_img_path(img_bgr, img_name, oss_root_dir=""):
+        """
+        上传图像
+        """
+        from x_utils.oss_utils import save_img_2_oss
+        if not oss_root_dir:
+            oss_root_dir = "zhengsheng.wcl/problems_segmentation/kousuan/imgs-tmp/{}".format(get_current_day_str())
+        img_url = save_img_2_oss(img_bgr, img_name, oss_root_dir)
+        return img_url
+
+    @staticmethod
+    def process_line(idx, data_line, imgs_dir, lbls_dir, out_txt):
         data_line = data_line.replace("\'", "\"")
         data_dict = json.loads(data_line)
         img_url = data_dict['url']
-        rec_bboxes = data_dict['coord']
+        point_boxes = data_dict['coord']
+
+        img_name = img_url.split("/")[-1].split(".")[0]
 
         # 不同文件使用不同的文件名
         file_idx = str(idx).zfill(5)
-        img_path = os.path.join(imgs_dir, 'v1_{}.jpg'.format(file_idx))
-        lbl_path = os.path.join(lbls_dir, 'v1_{}.txt'.format(file_idx))
+        img_path = os.path.join(imgs_dir, 'v1_{}_{}.jpg'.format(file_idx, img_name))
+        lbl_path = os.path.join(lbls_dir, 'v1_{}_{}.txt'.format(file_idx, img_name))
 
         # 写入图像
         is_ok, img_bgr = download_url_img(img_url)
@@ -79,9 +97,12 @@ class DataProcessor(object):
         res_bboxes_lines = []
 
         bbox_list = []
-        for rec_bbox in rec_bboxes:
-            bbox_list.append(rec2bbox(rec_bbox))
-        draw_box_list(img_bgr, bbox_list, is_show=True)
+        for point_bbox in point_boxes:
+            bbox_list.append(rec2bbox(point_bbox))
+        # draw_box_list(img_bgr, bbox_list, is_show=True)
+        img_out = draw_rec_list(img_bgr, point_boxes)
+        img_out_url = DataProcessor.save_img_path(img_out, "{}-{}.jpg".format(img_name, get_current_time_str()))
+        write_line(out_txt, "{}\t{}".format(img_out_url, img_name))
 
         # 写入3个不同标签
         for bbox in bbox_list:
@@ -96,6 +117,7 @@ class DataProcessor(object):
     def process(self):
         print('[Info] 处理数据: {}'.format(self.file_name))
         data_lines = read_file(self.file_name)
+        data_lines = data_lines[:50]
         n_lines = len(data_lines)
         random.seed(47)
         random.shuffle(data_lines)
@@ -110,18 +132,26 @@ class DataProcessor(object):
         pool = Pool(processes=100)
 
         for idx, data_line in enumerate(train_lines):
-            # DataProcessor.process_line(idx, data_line, self.train_imgs_dir, self.train_lbls_dir)
+            # DataProcessor.process_line(idx, data_line, self.train_imgs_dir, self.train_lbls_dir, self.out_txt)
             pool.apply_async(DataProcessor.process_line,
-                             (idx, data_line, self.train_imgs_dir, self.train_lbls_dir))
+                             (idx, data_line, self.train_imgs_dir, self.train_lbls_dir, self.out_txt))
 
         for idx, data_line in enumerate(val_lines):
-            # DataProcessor.process_line(idx, data_line, self.val_imgs_dir, self.val_lbls_dir)
+            # DataProcessor.process_line(idx, data_line, self.val_imgs_dir, self.val_lbls_dir, self.out_txt)
             pool.apply_async(DataProcessor.process_line,
-                             (idx, data_line, self.val_imgs_dir, self.val_lbls_dir))
+                             (idx, data_line, self.val_imgs_dir, self.val_lbls_dir, self.out_txt))
 
         pool.close()
         pool.join()
         print('[Info] 处理完成: {}'.format(self.out_dir))
+
+        data_lines = read_file(self.out_txt)
+        out_list = []
+        for data_line in data_lines:
+            items = data_line.split("\t")
+            out_list.append(items)
+        make_html_page(self.out_html, out_list)
+        print('[Info] 写入完成: {}'.format(self.out_html))
 
 
 def main():
