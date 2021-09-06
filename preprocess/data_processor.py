@@ -24,8 +24,8 @@ class DataProcessor(object):
     英语单词数据处理
     """
     def __init__(self):
-        self.file_name = os.path.join(DATA_DIR, 'files', 'dump_train_kousuan.txt')
-        self.out_dir = os.path.join(DATA_DIR, 'dataset_cut_problems_20210831')
+        self.file_name = os.path.join(DATA_DIR, 'files', 'dump_train_kousuan-20210906.txt')
+        self.out_dir = os.path.join(DATA_DIR, 'dataset_cut_problems_20210906')
         mkdir_if_not_exist(self.out_dir)
         self.imgs_dir = os.path.join(self.out_dir, 'images')
         self.lbls_dir = os.path.join(self.out_dir, 'labels')

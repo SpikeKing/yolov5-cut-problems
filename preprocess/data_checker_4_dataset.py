@@ -19,7 +19,7 @@ from myutils.project_utils import *
 from root_dir import DATA_DIR
 
 
-class DataChecker(object):
+class DataChecker4Dataset(object):
     def __init__(self, in_folder, out_folder):
         self.in_folder = in_folder
         self.out_folder = out_folder
@@ -59,12 +59,12 @@ class DataChecker(object):
         bbox_list = []
         for idx, data_line in enumerate(data_lines):
             ih, iw, _ = img_bgr.shape
-            bbox = DataChecker.check_darknet_data(ih, iw, data_line)
+            bbox = DataChecker4Dataset.check_darknet_data(ih, iw, data_line)
             bbox_list.append(bbox)
 
         img_out = draw_box_list(img_bgr, bbox_list)
         img_name = "{}-{}.jpg".format(name.split('.')[0], get_current_time_str())
-        img_out_url = DataChecker.save_img_path(img_out, img_name)
+        img_out_url = DataChecker4Dataset.save_img_path(img_out, img_name)
         write_line(out_txt, "{}\t{}".format(img_out_url, name.split('.')[0]))
         print("[Info] 处理完成: {}".format(img_idx))
 
@@ -84,7 +84,7 @@ class DataChecker(object):
         pool = Pool(processes=100)
         for img_idx, (path, name) in enumerate(zip(paths_list, names_list)):
             # DataChecker.process_item(img_idx, name, path, label_folder, out_txt)
-            pool.apply_async(DataChecker.process_item, (img_idx, name, path, label_folder, out_txt))
+            pool.apply_async(DataChecker4Dataset.process_item, (img_idx, name, path, label_folder, out_txt))
         pool.close()
         pool.join()
         print('[Info] 检查完成! {}'.format(self.in_folder))
@@ -120,7 +120,7 @@ def parse_args():
 
 def main():
     arg_in_folder, arg_out_folder = parse_args()
-    dc = DataChecker(arg_in_folder, arg_out_folder)
+    dc = DataChecker4Dataset(arg_in_folder, arg_out_folder)
     dc.process()
 
 
