@@ -70,7 +70,7 @@ class DataChecker4File(object):
         data_lines = read_file(self.out_imgs_url)
         out_list = []
         for data_line in data_lines:
-            out_list.append(data_line)
+            out_list.append([data_line])
         make_html_page(self.out_imgs_html, out_list)
         print('[Info] 写入完成: {}'.format(self.out_imgs_html))
 
