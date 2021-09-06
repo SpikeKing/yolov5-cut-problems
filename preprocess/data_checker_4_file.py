@@ -61,8 +61,8 @@ class DataChecker4File(object):
 
         pool = Pool(processes=100)
         for data_idx, new_data_line in enumerate(new_data_lines):
-            # DataChecker4File.save_img_path(data_idx, new_data_line, self.out_imgs_url)
-            pool.apply_async(DataChecker4File.save_img_path, (data_idx, new_data_line, self.out_imgs_url))
+            DataChecker4File.process_line(data_idx, new_data_line, self.out_imgs_url)
+            # pool.apply_async(DataChecker4File.process_line, (data_idx, new_data_line, self.out_imgs_url))
         pool.close()
         pool.join()
 
