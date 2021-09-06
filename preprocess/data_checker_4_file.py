@@ -5,19 +5,16 @@ Copyright (c) 2021. All rights reserved.
 Created by C. L. Wang on 6.9.21
 """
 
-import json
 import os
 import sys
 
-import cv2
 from multiprocessing.pool import Pool
-
-from myutils.make_html_page import make_html_page
 
 p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if p not in sys.path:
     sys.path.append(p)
 
+from myutils.make_html_page import make_html_page
 from myutils.cv_utils import *
 from myutils.project_utils import *
 from root_dir import DATA_DIR
