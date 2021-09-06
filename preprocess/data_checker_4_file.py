@@ -51,7 +51,7 @@ class DataChecker4File(object):
         out_img_name = "{}-{}-{}.jpg".format(data_idx, img_name, get_current_time_str())
         out_img_url = DataChecker4File.save_img_path(img_out, out_img_name)
         write_line(out_file, out_img_url)
-        print('[Info] 处理完成!')
+        print('[Info] idx: {} 处理完成!'.format(data_idx))
 
     def process(self):
         old_data_lines = read_file(self.old_file_name)
@@ -61,8 +61,8 @@ class DataChecker4File(object):
 
         pool = Pool(processes=100)
         for data_idx, new_data_line in enumerate(new_data_lines):
-            DataChecker4File.process_line(data_idx, new_data_line, self.out_imgs_url)
-            # pool.apply_async(DataChecker4File.process_line, (data_idx, new_data_line, self.out_imgs_url))
+            # DataChecker4File.process_line(data_idx, new_data_line, self.out_imgs_url)
+            pool.apply_async(DataChecker4File.process_line, (data_idx, new_data_line, self.out_imgs_url))
         pool.close()
         pool.join()
 
